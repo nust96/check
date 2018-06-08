@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+<meta name="viewport" content="width=device-width, initial-scale=1"> 
+<title>星云链钱包地址检验器</title>
+<link rel="stylesheet" type="text/css" href="css/normalize.css" />
+<link rel="stylesheet" type="text/css" href="css/demo.css" />
+<!--必要样式-->
+<link rel="stylesheet" type="text/css" href="css/component.css" />
+<script type="text/javascript" src="./dist/nebulas.js"></script>
+
+<script type="text/javascript" src="./dist/nebPay.js"></script>
+<script type="text/javascript" src="./jquery-3.3.1.min.js"></script>
+<!--[if IE]>
+<script src="js/html5.js"></script>
+<![endif]-->
+</head>
+<body>
+		<div class="container demo-1">
+			<div class="content">
+				<div id="large-header" class="large-header">
+					<canvas id="demo-canvas"></canvas>
+					<div class="logo_box">
+						<h3>欢迎你</h3>
+						<form action="#" name="f" method="post">
+							<div class="input_outer">
+								<span class="u_user"></span>
+								<input name="logname" class="text" style="color: #FFFFFF !important" type="text" placeholder="请输入星云链钱包地址" id=search_addr>
+							</div>
+							<div class="input_outer">
+								<span class="us_uer"></span>
+								<input name="logpass" class="text" style="color: #FFFFFF !important; position:absolute; z-index:100;"value=""  type="text" placeholder="相关联字段" id=content>
+							</div>
+							<div class="mb2"><a class="act-but submit" href="javascript:;" style="color: #FFFFFF" id=post>存入（输入地址和相关联字段）</a><a class="act-but submit" href="javascript:;" style="color: #FFFFFF" id=search>读取（输入地址）</a></div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div><!-- /container -->
+		
+		<script src="js/TweenLite.min.js"></script>
+		<script src="js/EasePack.min.js"></script>
+		<script src="js/rAF.js"></script>
+		<script src="js/demo-1.js"></script>
+		<script>
+				alert("1在星云链上转账如果钱包地址错误将无法追回，你也联系不到对方!!\n2所以你可以在本站设置一个与你钱包地址相关联的字段（比如你的名字，暗号）并存储与星云链上。\n3在需要转账时把你的地址和这个字段传给对方，对方通过在本站的查询再次确认这个人地址是你的，避免了错误的发生");
+				</script>
+		<div style="text-align:center;">
+
+</div>
+	</body>
+	<script>
+	var dappContactAddress = "n1uQJB7XxbAAhvvP718LVSToGgv269hoYxC";
+    var nebulas = require("nebulas"), Account = Account, neb = new nebulas.Neb();
+    neb.setRequest(new nebulas.HttpRequest("https://mainnet.nebulas.io"));
+
+
+    var NebPay = require("nebpay");     //https://github.com/nebulasio/nebPay
+    var nebPay = new NebPay();
+    var serialNumber
+
+	 $("#search").click(function () {
+        if (!$("#search_addr").val()) {
+            alter('钱包地址不能为空');
+            return;
+        }
+
+        $('#content').text("");
+        var from = dappContactAddress
+        var value = "0";
+        var nonce = "0"
+        var gas_price = "1000000"
+        var gas_limit = "2000000"
+        var callFunction = "get";
+        var callArgs = "[\"" + $("#search_addr").val() + "\"]";
+        console.log(callArgs);
+        var contract = {
+            "function": callFunction,
+            "args": callArgs
+        }
+
+
+        neb.api.call(from, dappContactAddress, value, nonce, gas_price, gas_limit, contract).then(function (resp) {
+            var result = resp.result;
+            
+            if (result === 'null') {
+                $('#content').val("没有与该地址关联的字段！");//val 和text
+               
+                return;
+            }
+            console.log(result);
+            result = JSON.parse(result);
+            
+            $('#content').val(result.field);
+            
+
+        }).catch(function (err) {
+            console.log("error :" + err.message);
+
+        })
+
+	})
+	
+	$('#post').click(function () {
+        if (!$("#content").val() || !$("#search_addr").val()) {
+            alert('钱包地址与相关联字段不能为空');
+            return;
+        }
+        var to = dappContactAddress;
+        var value = "0";
+        var callFunction = "save";
+        var callArgs = "[\"" + $("#search_addr").val() + "\",\"" + $("#content").val() + "\"]";
+        console.log(callArgs);
+
+        serialNumber = nebPay.call(to, value, callFunction, callArgs, {    //使用nebpay的call接口去调用合约,
+            listener: function (resp) {
+                console.log("thecallback is " + resp)
+            }
+        });
+
+    })
+	
+	
+	
+	
+	
+	
+	
+	
+	</script>
+</html>
